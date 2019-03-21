@@ -98,3 +98,34 @@ class ClientesDb():
 
     def fechar_conexao(self):
         self.db.close_db()
+
+c = ClientesDb()
+c.criar_schema()
+opcao = -1
+while opcao != 0:
+    print("\n************ Domain Validation **************\n")
+
+    print("\tMENU\n")
+
+    print("[1] - Inserir registro ")
+    print("[2] - Imprimir todos" )
+    print("[3] - Localizar")
+    print("[4] - Total de registros")
+    print("[5] - Deletar registro\n")
+
+    print("[0] - Sair\n")
+
+    opcao = int(input("Digite um número: "))
+
+    if opcao == 1:
+        c.inserir_email()
+    elif opcao == 2:
+        c.imprimir_todos_clientes()
+    elif opcao == 3:
+        c.imprimir_cliente()
+    elif opcao == 4:
+        c.contar_cliente()
+    elif opcao == 5:
+        c.deletar()
+
+c.fechar_conexao()
