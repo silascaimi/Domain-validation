@@ -1,5 +1,6 @@
 import sqlite3
 import io
+import csv
 
 class Connect():
 
@@ -57,6 +58,18 @@ class ClientesDb():
             print("Aviso: O email deve ser único.")
             return False
 
+    def inserir_de_csv(self, file_name='csv/clientes.csv'):
+        try:
+            reader = csv.reader(open(file_name, 'rt'), delimiter=',')
+            linha = (reader,)
+            for linha in reader:
+                self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", linha)
+            self.db.commit_db()
+            print("Dados importados do csv com sucesso.")
+        except sqlite3.IntegrityError:
+            print("Aviso: O email deve ser único.")
+            return False
+
     def ler_todos_clientes(self):
         sql = 'SELECT * FROM clientes ORDER BY email'
         r = self.db.cursor.execute(sql)
@@ -64,9 +77,9 @@ class ClientesDb():
 
     def imprimir_todos_clientes(self):
         lista = self.ler_todos_clientes()
-        print('{:>3s} {:21s}'.format('id', 'email'))
+        print('{:>3s} {:>21s}'.format('id', 'email'))
         for c in lista:
-            print('{:3d} {:>25s}'.format(c[0], c[1]))
+            print('{:3d} {:>35s}'.format(c[0], c[1]))
 
     def localizar_cliente(self, email):
         r = self.db.cursor.execute('SELECT * FROM clientes WHERE email = ?', (email,))
@@ -101,17 +114,19 @@ class ClientesDb():
 
 c = ClientesDb()
 c.criar_schema()
+
 opcao = -1
 while opcao != 0:
     print("\n************ Domain Validation **************\n")
 
     print("\tMENU\n")
 
-    print("[1] - Inserir registro ")
-    print("[2] - Imprimir todos" )
-    print("[3] - Localizar")
-    print("[4] - Total de registros")
-    print("[5] - Deletar registro\n")
+    print("[1] - Inserir um registro")
+    print("[2] - Inserir de arquivo CSV")
+    print("[3] - Imprimir todos" )
+    print("[4] - Localizar")
+    print("[5] - Total de registros")
+    print("[6] - Deletar registro\n")
 
     print("[0] - Sair\n")
 
@@ -120,12 +135,14 @@ while opcao != 0:
     if opcao == 1:
         c.inserir_email()
     elif opcao == 2:
-        c.imprimir_todos_clientes()
+        c.inserir_de_csv()
     elif opcao == 3:
-        c.imprimir_cliente()
+        c.imprimir_todos_clientes()
     elif opcao == 4:
-        c.contar_cliente()
+        c.imprimir_cliente()
     elif opcao == 5:
+        c.contar_cliente()
+    elif opcao == 6:
         c.deletar()
 
 c.fechar_conexao()
