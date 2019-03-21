@@ -56,15 +56,35 @@ class ClientesDb():
                 except sqlite3.IntegrityError:
                     print("Aviso: O email deve ser único.")
                     return False
+            else:
+                print("Dominio inválido")
+        else:
+            print("Formato de email inválido")
 
     def inserir_de_csv(self, file_name='csv/clientes.csv'):
+        emails_validados = open('csv/emails_validados.csv', 'w')
+        emails_invalidos = open('csv/emails_invalios.csv', 'w')
+        cont_validos = 0
+        cont_invalidos = 0
         try:
             reader = csv.reader(open(file_name, 'rt'), delimiter=',')
             linha = (reader,)
             for linha in reader:
-                self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", linha)
+                if self.validar_email(linha[0]) and self.validar_dominio(linha[0]):
+                    self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", linha)
+                    row = linha[0] + '\n'
+                    emails_validados.write(row)
+                    cont_validos += 1
+                else:
+                    row = linha[0] + '\n'
+                    emails_invalidos.write(row)
+                    cont_invalidos += 1
             self.db.commit_db()
             print("Dados importados do csv com sucesso.")
+            total_emails = cont_validos + cont_invalidos
+            print("Emails verificados: {}".format(total_emails))
+            print("Emails válidos: {} {}%".format(cont_validos, round(((cont_validos)/total_emails)*100, 2)))
+            print("Emails inválidos: {} {}%".format(cont_invalidos, round(((cont_invalidos)/total_emails)*100, 2)))
         except sqlite3.IntegrityError:
             print("Aviso: O email deve ser único.")
             return False
@@ -111,8 +131,6 @@ class ClientesDb():
     def validar_email(self, email):
         if re.match("^.+@(\[?)[a-zA-Z0-9-.]+.([a-zA-Z]{2,3}|[0-9]{1,3})(]?)$", email) != None:
             return True
-        else:
-            print("Formato de email inválido")
         return False
 
     def validar_dominio(self, email):
@@ -120,10 +138,8 @@ class ClientesDb():
         dominios = csv.reader(open(self.file_name, 'rt'), delimiter=',')
         dominio = (dominios,)
         for dominio in dominios:
-            if dominio[0] in email:
-                print("Dominio válido")
+            if dominio[0].lower() in email.lower():
                 return True
-        print("Dominio inválido")
         return False
 
     def fechar_conexao(self):
@@ -132,37 +148,35 @@ class ClientesDb():
 c = ClientesDb()
 c.criar_schema()
 
-c.validar_dominio('silas@uol.com.br')
+opcao = -1
+while opcao != 0:
+    print("\n************ Domain Validation **************\n")
 
-#opcao = -1
-#while opcao != 0:
-#    print("\n************ Domain Validation **************\n")
+    print("\tMENU\n")
 
-#    print("\tMENU\n")
+    print("[1] - Inserir um registro")
+    print("[2] - Inserir de arquivo CSV")
+    print("[3] - Imprimir todos" )
+    print("[4] - Localizar")
+    print("[5] - Total de registros")
+    print("[6] - Deletar registro\n")
 
-#    print("[1] - Inserir um registro")
-#    print("[2] - Inserir de arquivo CSV")
-#    print("[3] - Imprimir todos" )
-#    print("[4] - Localizar")
-#    print("[5] - Total de registros")
-#    print("[6] - Deletar registro\n")
+    print("[0] - Sair\n")
 
-#    print("[0] - Sair\n")
+    opcao = int(input("Digite um número: "))
 
-#    opcao = int(input("Digite um número: "))
-
-#    if opcao == 1:
-#        c.inserir_email()
-#    elif opcao == 2:
-#        c.inserir_de_csv()
-#    elif opcao == 3:
-#        c.imprimir_todos_clientes()
-#    elif opcao == 4:
-#        c.imprimir_cliente()
-#    elif opcao == 5:
-#        c.contar_cliente()
-#    elif opcao == 6:
-#        c.deletar()
+    if opcao == 1:
+        c.inserir_email()
+    elif opcao == 2:
+        c.inserir_de_csv()
+    elif opcao == 3:
+        c.imprimir_todos_clientes()
+    elif opcao == 4:
+        c.imprimir_cliente()
+    elif opcao == 5:
+        c.contar_cliente()
+    elif opcao == 6:
+        c.deletar()
 
 c.fechar_conexao()
 
