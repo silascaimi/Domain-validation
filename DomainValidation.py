@@ -1,6 +1,7 @@
 import sqlite3
 import io
 import csv
+import re
 
 class Connect():
 
@@ -49,14 +50,16 @@ class ClientesDb():
 
     def inserir_email(self):
         self.email = input('Email: ')
-
-        try:
-            self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", (self.email,))
-            self.db.commit_db()
-            print("Dados inseridos com sucesso.")
-        except sqlite3.IntegrityError:
-            print("Aviso: O email deve ser único.")
-            return False
+        if self.validar_email(self.email):
+            try:
+                self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", (self.email,))
+                self.db.commit_db()
+                print("Dados inseridos com sucesso.")
+            except sqlite3.IntegrityError:
+                print("Aviso: O email deve ser único.")
+                return False
+        else:
+            print("Formato de email inválido")
 
     def inserir_de_csv(self, file_name='csv/clientes.csv'):
         try:
@@ -108,6 +111,11 @@ class ClientesDb():
                 print('Não existe cliente com o email informado.')
         except e:
             raise e
+
+    def validar_email(self, email):
+        if re.match("^.+@(\[?)[a-zA-Z0-9-.]+.([a-zA-Z]{2,3}|[0-9]{1,3})(]?)$", email) != None:
+            return True
+        return False
 
     def fechar_conexao(self):
         self.db.close_db()
