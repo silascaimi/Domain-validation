@@ -48,15 +48,14 @@ class ClientesDb():
     def inserir_email(self):
         self.email = input('Email: ')
         if self.validar_email(self.email):
-            try:
-                self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", (self.email,))
-                self.db.commit_db()
-                print("Dados inseridos com sucesso.")
-            except sqlite3.IntegrityError:
-                print("Aviso: O email deve ser único.")
-                return False
-        else:
-            print("Formato de email inválido")
+            if self.validar_dominio(self.email):
+                try:
+                    self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", (self.email,))
+                    self.db.commit_db()
+                    print("Dados inseridos com sucesso.")
+                except sqlite3.IntegrityError:
+                    print("Aviso: O email deve ser único.")
+                    return False
 
     def inserir_de_csv(self, file_name='csv/clientes.csv'):
         try:
@@ -112,24 +111,28 @@ class ClientesDb():
     def validar_email(self, email):
         if re.match("^.+@(\[?)[a-zA-Z0-9-.]+.([a-zA-Z]{2,3}|[0-9]{1,3})(]?)$", email) != None:
             return True
+        else:
+            print("Formato de email inválido")
         return False
 
     def validar_dominio(self, email):
         self.file_name='csv/dominios_validos.csv'
         dominios = csv.reader(open(self.file_name, 'rt'), delimiter=',')
+        dominio = (dominios,)
         for dominio in dominios:
             if dominio[0] in email:
                 print("Dominio válido")
                 return True
-            else:
-                print("Dominio inválido")
-                return False
+        print("Dominio inválido")
+        return False
 
     def fechar_conexao(self):
         self.db.close_db()
 
 c = ClientesDb()
 c.criar_schema()
+
+c.validar_dominio('silas@uol.com.br')
 
 #opcao = -1
 #while opcao != 0:
