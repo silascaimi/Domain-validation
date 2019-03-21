@@ -4,14 +4,11 @@ import csv
 import re
 
 class Connect():
-
     def __init__(self, db_name):
         try:
             self.conn = sqlite3.connect(db_name)
             self.cursor = self.conn.cursor()
-
             print("Banco:", db_name)
-
             self.cursor.execute('SELECT SQLITE_VERSION()')
             self.data = self.cursor.fetchone()
             print("SQLite version: %s" % self.data)
@@ -117,40 +114,52 @@ class ClientesDb():
             return True
         return False
 
+    def validar_dominio(self, email):
+        self.file_name='csv/dominios_validos.csv'
+        dominios = csv.reader(open(self.file_name, 'rt'), delimiter=',')
+        for dominio in dominios:
+            if dominio[0] in email:
+                print("Dominio válido")
+                return True
+            else:
+                print("Dominio inválido")
+                return False
+
     def fechar_conexao(self):
         self.db.close_db()
 
 c = ClientesDb()
 c.criar_schema()
 
-opcao = -1
-while opcao != 0:
-    print("\n************ Domain Validation **************\n")
+#opcao = -1
+#while opcao != 0:
+#    print("\n************ Domain Validation **************\n")
 
-    print("\tMENU\n")
+#    print("\tMENU\n")
 
-    print("[1] - Inserir um registro")
-    print("[2] - Inserir de arquivo CSV")
-    print("[3] - Imprimir todos" )
-    print("[4] - Localizar")
-    print("[5] - Total de registros")
-    print("[6] - Deletar registro\n")
+#    print("[1] - Inserir um registro")
+#    print("[2] - Inserir de arquivo CSV")
+#    print("[3] - Imprimir todos" )
+#    print("[4] - Localizar")
+#    print("[5] - Total de registros")
+#    print("[6] - Deletar registro\n")
 
-    print("[0] - Sair\n")
+#    print("[0] - Sair\n")
 
-    opcao = int(input("Digite um número: "))
+#    opcao = int(input("Digite um número: "))
 
-    if opcao == 1:
-        c.inserir_email()
-    elif opcao == 2:
-        c.inserir_de_csv()
-    elif opcao == 3:
-        c.imprimir_todos_clientes()
-    elif opcao == 4:
-        c.imprimir_cliente()
-    elif opcao == 5:
-        c.contar_cliente()
-    elif opcao == 6:
-        c.deletar()
+#    if opcao == 1:
+#        c.inserir_email()
+#    elif opcao == 2:
+#        c.inserir_de_csv()
+#    elif opcao == 3:
+#        c.imprimir_todos_clientes()
+#    elif opcao == 4:
+#        c.imprimir_cliente()
+#    elif opcao == 5:
+#        c.contar_cliente()
+#    elif opcao == 6:
+#        c.deletar()
 
 c.fechar_conexao()
+
