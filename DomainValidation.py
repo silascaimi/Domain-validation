@@ -1,7 +1,7 @@
 import sqlite3
 import io
 
-class Connect(object):
+class Connect():
 
     def __init__(self, db_name):
         try:
@@ -36,7 +36,6 @@ class ClientesDb():
 
     def criar_schema(self, schema_name='sql/clientes_schema.sql'):
         print("Criando tabela %s ..." % self.tb_name)
-
         try:
             with open(schema_name, 'rt') as f:
                 schema = f.read()
@@ -51,11 +50,7 @@ class ClientesDb():
         self.email = input('Email: ')
 
         try:
-            self.db.cursor.execute("""
-            INSERT INTO clientes (email)
-            VALUES (?)
-            """, (self.email))
-
+            self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", (self.email,))
             self.db.commit_db()
             print("Dados inseridos com sucesso.")
         except sqlite3.IntegrityError:
@@ -77,28 +72,29 @@ class ClientesDb():
         r = self.db.cursor.execute('SELECT * FROM clientes WHERE email = ?', (email,))
         return r.fetchone()
 
-    def imprimir_cliente(self, email):
-        if self.localizar_cliente(email) == None:
+    def imprimir_cliente(self):
+        self.email = input("Email: ")
+        if self.localizar_cliente(self.email) == None:
             print('Não existe cliente com o email informado.')
         else:
-            print(self.localizar_cliente(email))
+            print(self.localizar_cliente(self.email))
 
     def contar_cliente(self):
         r = self.db.cursor.execute('SELECT COUNT(*) FROM clientes')
         print("Total de clientes:", r.fetchone()[0])
 
-    def deletar(self, email):
+    def deletar(self):
+        self.email = input("Email: ")
         try:
-            c = self.localizar_cliente(email)
-
+            c = self.localizar_cliente(self.email)
             if c:
-                self.db.cursor.execute("""DELETE FROM clientes WHERE email = ?
-                """, (email,))
-
+                self.db.cursor.execute("""DELETE FROM clientes WHERE email = ?""", (self.email,))
                 self.db.commit_db()
-                print("Registro %d excluído com sucesso." % email)
+                print("Registro %s excluído com sucesso." % self.email)
             else:
                 print('Não existe cliente com o email informado.')
         except e:
             raise e
 
+    def fechar_conexao(self):
+        self.db.close_db()
