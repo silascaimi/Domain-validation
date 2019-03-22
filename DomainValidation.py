@@ -70,29 +70,35 @@ class ClientesDb():
         cont_validos = 0
         cont_invalidos = 0
         cont_duplicados = 0
-
-        reader = csv.reader(open(file_name, 'rt'), delimiter=',')
-        email = (reader,)
+        cont_dominio_invalido = 0
+        cont_email_sintaxe_error = 0
         email_list = []
-
-        for email in reader:
-            email_list.append(email[0][1:-1])
+        reader = csv.reader(open(file_name, 'rt'), delimiter=',')
+        
+        for (email,) in reader:
+            email_list.append(email[1:-1])
         email_list = self.remove_repetidos(email_list)
 
         for email in email_list:
-            if self.validar_email(email) and self.validar_dominio(email):
-                try:
-                    self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", (email,))
-                except sqlite3.IntegrityError:
-                    cont_duplicados += 1
-                email += '\n'
-                emails_validados.write(email)
-                cont_validos += 1
+            if self.validar_email(email):
+                if self.validar_dominio(email):
+                    try:
+                        self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", (email,))
+                    except sqlite3.IntegrityError:
+                        cont_duplicados += 1
+                    email += '\n'
+                    emails_validados.write(email)
+                    cont_validos += 1
+                else:
+                    email += '\n'
+                    emails_invalidos.write(email)
+                    cont_invalidos += 1
+                    cont_dominio_invalido += 1
             else:
                 email += '\n'
                 emails_invalidos.write(email)
                 cont_invalidos += 1
-
+                cont_email_sintaxe_error +=1
         self.db.commit_db()
 
         print("Dados importados do csv com sucesso.\n")
@@ -100,6 +106,8 @@ class ClientesDb():
         print("Emails verificados: {}".format(total_emails))
         print("Emails válidos: {} {}%".format(cont_validos, round(((cont_validos)/total_emails)*100, 2)))
         print("Emails inválidos: {} {}%\n".format(cont_invalidos, round(((cont_invalidos)/total_emails)*100, 2)))
+        print("Emails com sintaxe incorreta: {}".format(cont_email_sintaxe_error))
+        print("Emails com dominio invalido: {}\n".format(cont_dominio_invalido))
         print("Emails já existentes no banco: {}".format(cont_duplicados))
         print("Emails adicionados ao banco: {}".format(cont_validos-cont_duplicados))
         print("\nRelação de emails válidos criado em csv/emails_validados.csv")
