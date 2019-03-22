@@ -69,35 +69,42 @@ class ClientesDb():
         emails_invalidos = open('csv/emails_invalios.csv', 'w')
         cont_validos = 0
         cont_invalidos = 0
-        try:
-            reader = csv.reader(open(file_name, 'rt'), delimiter=',')
-            email = (reader,)
-            email_list = []
-            for email in reader:
-                email_list.append(email)
-            email_list = self.remove_repetidos(email_list)
-            for email in email_list:
-                linha = email[0][1:-1]
-                if self.validar_email(linha) and self.validar_dominio(linha):
+        cont_duplicados = 0
+
+        reader = csv.reader(open(file_name, 'rt'), delimiter=',')
+        email = (reader,)
+        email_list = []
+
+        for email in reader:
+            email_list.append(email)
+        email_list = self.remove_repetidos(email_list)
+
+        for email in email_list:
+            linha = email[0][1:-1]
+            if self.validar_email(linha) and self.validar_dominio(linha):
+                try:
                     self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", email)
-                    linha += '\n'
-                    emails_validados.write(linha)
-                    cont_validos += 1
-                else:
-                    linha += '\n'
-                    emails_invalidos.write(linha)
-                    cont_invalidos += 1
-            self.db.commit_db()
-            print("Dados importados do csv com sucesso.")
-            total_emails = cont_validos + cont_invalidos
-            print("Emails verificados: {}".format(total_emails))
-            print("Emails válidos: {} {}%".format(cont_validos, round(((cont_validos)/total_emails)*100, 2)))
-            print("Emails inválidos: {} {}%".format(cont_invalidos, round(((cont_invalidos)/total_emails)*100, 2)))
-            print("\nRelação de emails válidos criado em csv/emails_validados.csv")
-            print("Relação de emails inválidos criado em csv/emails_invalios.csv\n")
-        except sqlite3.IntegrityError:
-            print("Aviso: O email deve ser único.")
-            return False
+                except sqlite3.IntegrityError:
+                    cont_duplicados += 1
+                linha += '\n'
+                emails_validados.write(linha)
+                cont_validos += 1
+            else:
+                linha += '\n'
+                emails_invalidos.write(linha)
+                cont_invalidos += 1
+
+        self.db.commit_db()
+
+        print("Dados importados do csv com sucesso.\n")
+        total_emails = cont_validos + cont_invalidos
+        print("Emails verificados: {}".format(total_emails))
+        print("Emails válidos: {} {}%".format(cont_validos, round(((cont_validos)/total_emails)*100, 2)))
+        print("Emails inválidos: {} {}%\n".format(cont_invalidos, round(((cont_invalidos)/total_emails)*100, 2)))
+        print("Emails já existentes no banco: {}".format(cont_duplicados))
+        print("Emails adicionados ao banco: {}".format(cont_validos-cont_duplicados))
+        print("\nRelação de emails válidos criado em csv/emails_validados.csv")
+        print("Relação de emails inválidos criado em csv/emails_invalios.csv\n")
 
     def ler_todos_clientes(self):
         sql = 'SELECT * FROM clientes ORDER BY email'
