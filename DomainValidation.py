@@ -2,6 +2,7 @@ import sqlite3
 import io
 import csv
 import re
+import os
 
 class Connect():
     def __init__(self, db_name):
@@ -47,6 +48,7 @@ class ClientesDb():
 
     def inserir_email(self):
         self.email = input('Email: ')
+        os.system('cls')
         if self.validar_email(self.email):
             if self.validar_dominio(self.email):
                 try:
@@ -61,23 +63,29 @@ class ClientesDb():
         else:
             print("Formato de email inválido")
 
-    def inserir_de_csv(self, file_name='csv/clientes.csv'):
+    def inserir_de_csv(self, file_name='csv/email_list.csv'):
+        os.system('cls')
         emails_validados = open('csv/emails_validados.csv', 'w')
         emails_invalidos = open('csv/emails_invalios.csv', 'w')
         cont_validos = 0
         cont_invalidos = 0
         try:
             reader = csv.reader(open(file_name, 'rt'), delimiter=',')
-            linha = (reader,)
-            for linha in reader:
-                if self.validar_email(linha[0]) and self.validar_dominio(linha[0]):
-                    self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", linha)
-                    row = linha[0] + '\n'
-                    emails_validados.write(row)
+            email = (reader,)
+            email_list = []
+            for email in reader:
+                email_list.append(email)
+            email_list = self.remove_repetidos(email_list)
+            for email in email_list:
+                linha = email[0][1:-1]
+                if self.validar_email(linha) and self.validar_dominio(linha):
+                    self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", email)
+                    linha += '\n'
+                    emails_validados.write(linha)
                     cont_validos += 1
                 else:
-                    row = linha[0] + '\n'
-                    emails_invalidos.write(row)
+                    linha += '\n'
+                    emails_invalidos.write(linha)
                     cont_invalidos += 1
             self.db.commit_db()
             print("Dados importados do csv com sucesso.")
@@ -85,6 +93,8 @@ class ClientesDb():
             print("Emails verificados: {}".format(total_emails))
             print("Emails válidos: {} {}%".format(cont_validos, round(((cont_validos)/total_emails)*100, 2)))
             print("Emails inválidos: {} {}%".format(cont_invalidos, round(((cont_invalidos)/total_emails)*100, 2)))
+            print("\nRelação de emails válidos criado em csv/emails_validados.csv")
+            print("Relação de emails inválidos criado em csv/emails_invalios.csv\n")
         except sqlite3.IntegrityError:
             print("Aviso: O email deve ser único.")
             return False
@@ -95,6 +105,7 @@ class ClientesDb():
         return r.fetchall()
 
     def imprimir_todos_clientes(self):
+        os.system('cls')
         lista = self.ler_todos_clientes()
         print('{:>3s} {:>21s}'.format('id', 'email'))
         for c in lista:
@@ -106,17 +117,20 @@ class ClientesDb():
 
     def imprimir_cliente(self):
         self.email = input("Email: ")
+        os.system('cls')
         if self.localizar_cliente(self.email) == None:
             print('Não existe cliente com o email informado.')
         else:
             print(self.localizar_cliente(self.email))
 
     def contar_cliente(self):
+        os.system('cls')
         r = self.db.cursor.execute('SELECT COUNT(*) FROM clientes')
         print("Total de clientes:", r.fetchone()[0])
 
     def deletar(self):
         self.email = input("Email: ")
+        os.system('cls')
         try:
             c = self.localizar_cliente(self.email)
             if c:
@@ -134,13 +148,26 @@ class ClientesDb():
         return False
 
     def validar_dominio(self, email):
-        self.file_name='csv/dominios_validos.csv'
+        self.file_name='csv/domain_list.csv'
         dominios = csv.reader(open(self.file_name, 'rt'), delimiter=',')
         dominio = (dominios,)
         for dominio in dominios:
-            if dominio[0].lower() in email.lower():
+            dominio = dominio[0][1:-1]
+            if dominio.lower() in email.lower():
                 return True
         return False
+
+    def remove_repetidos(self, lista):
+        self.l = []
+        self.repetidos = 0
+        for i in lista:
+            if i not in self.l:
+                self.l.append(i)
+            else:
+                self.repetidos +=1
+        self.l.sort()
+        print("Emails repetidos: {}".format(self.repetidos))
+        return self.l
 
     def fechar_conexao(self):
         self.db.close_db()
