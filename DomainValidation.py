@@ -108,10 +108,11 @@ class ClientesDb():
         print("Emails inválidos: {} {}%\n".format(cont_invalidos, round(((cont_invalidos)/total_emails)*100, 2)))
         print("Emails com sintaxe incorreta: {}".format(cont_email_sintaxe_error))
         print("Emails com dominio invalido: {}\n".format(cont_dominio_invalido))
+
         print("Emails já existentes no banco: {}".format(cont_duplicados))
         print("Emails adicionados ao banco: {}".format(cont_validos-cont_duplicados))
         print("\nRelação de emails válidos criado em csv/emails_validados.csv")
-        print("Relação de emails inválidos criado em csv/emails_invalios.csv\n")
+        print("Relação de emails inválidos criado em csv/emails_invalidos.csv\n")
 
     def ler_todos_clientes(self):
         sql = 'SELECT * FROM clientes ORDER BY email'
