@@ -76,22 +76,21 @@ class ClientesDb():
         email_list = []
 
         for email in reader:
-            email_list.append(email)
+            email_list.append(email[0][1:-1])
         email_list = self.remove_repetidos(email_list)
 
         for email in email_list:
-            linha = email[0][1:-1]
-            if self.validar_email(linha) and self.validar_dominio(linha):
+            if self.validar_email(email) and self.validar_dominio(email):
                 try:
-                    self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", email)
+                    self.db.cursor.execute("""INSERT INTO clientes (email) VALUES (?)""", (email,))
                 except sqlite3.IntegrityError:
                     cont_duplicados += 1
-                linha += '\n'
-                emails_validados.write(linha)
+                email += '\n'
+                emails_validados.write(email)
                 cont_validos += 1
             else:
-                linha += '\n'
-                emails_invalidos.write(linha)
+                email += '\n'
+                emails_invalidos.write(email)
                 cont_invalidos += 1
 
         self.db.commit_db()
@@ -172,7 +171,7 @@ class ClientesDb():
                 self.l.append(i)
             else:
                 self.repetidos +=1
-        self.l.sort()
+        #self.l.sort()
         print("Emails repetidos: {}".format(self.repetidos))
         return self.l
 
